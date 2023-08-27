@@ -16,9 +16,6 @@ router = APIRouter(
 )
 
 
-
-
-
 def get_db():
     try:
         db = SessionLocal()
