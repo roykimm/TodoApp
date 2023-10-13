@@ -1,0 +1,69 @@
+class MyUser(Base):
+    __tablename__ = "my_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    first_name = Column(String(80), nullable=False)
+    last_name = Column(String(80), nullable=False)
+    email = Column(String(320), nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow())
+
+    preference = Relationship("Preference", back_populates="user", uselist=False, passive_deletes=True)
+    address = Relationship("MyAddress", back_populates="user", passive_deletes=True)
+    roles = Relationship("Role", secondary="user_roles", back_populates="users", passive_deletes=True)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}, name: {self.first_name}, {self.last_name}"
+
+
+class Preference(Base):
+    __tablename__ = "preferences"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    language = Column(String(80), nullable=False)
+    currency = Column(String(3), nullable=False)
+    user_id = Column(Integer, ForeignKey("my_users.id", ondelete="CASCADE"), nullable=False, index=True, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow())
+
+    user = Relationship("MyUser", back_populates="preference")
+
+
+class MyAddress(Base):
+    __tablename__ = "my_addresses"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    road_name = Column(String(80), nullable=False)
+    postcode = Column(String(80), nullable=False)
+    city = Column(String(80), nullable=False)
+    user_id = Column(Integer, ForeignKey("my_users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow())
+
+    user = Relationship("MyUser", back_populates="my_addresses")
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}, name : {self.city}"
+
+
+class Role(Base):
+    __tablename__ = "roles"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(80), nullable=False)
+    slug = Column(String(80), nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow())
+
+    users = Relationship("MyUser", secondary="user_roles", back_populates="roles", passive_deletes=True)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}, name: {self.name}"
+
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+
+    user_id = Column(Integer, ForeignKey("my_users.id", ondelete="CASCADE"), primary_key=True)
+    role_id = Column(Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime, default=datetime.utcnow())
+    updated_at = Column(DateTime, default=datetime.utcnow())
